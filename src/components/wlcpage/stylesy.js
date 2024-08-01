@@ -17,13 +17,21 @@ function Stylesy() {
   const { setIsUserAuthorized, setId } = useUserData();
 
   useEffect(() => {
+    // Check if user is already authorized
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    if (userData && userData.userId) {
+      setIsUserAuthorized(true);
+      setId(userData.userId);
+      navigate('/');
+    }
+
     if (user?.username) {
       setNickname(user.username);
     }
     if (user?.id) {
       setId(user.id);
     }
-  }, [user, setId]);
+  }, [user, setId, navigate, setIsUserAuthorized]);
 
   useEffect(() => {
     const fetchAvatars = async () => {
@@ -45,74 +53,46 @@ function Stylesy() {
   const handleAvatarClick = (avatar) => {
     setSelectedAvatar(avatar.image);
     setSelectedAvatarId(avatar.generatedId); // Используем сгенерированный ID
-    console.log("Выбранный аватар ID:", avatar.generatedId); // Логируем ID выбранного аватара
   };
 
   const handleSave = async () => {
-    try {
-      const userId = await getNextAvailableId();
-      if (userId === null) {
-        throw new Error('Не удалось найти свободный ID');
-      }
-  
-      console.log("ID пользователя:", userId);
-      console.log("ID выбранного аватара перед сохранением:", selectedAvatarId);
-  
-      const userData = {
-        id: userId,
-        username: nickname || user?.username || 'default_username',
-        telegram_id: user?.id || null,
-        related_avatar: selectedAvatarId || 1, // Используем ID выбранного аватара
-        balance: 100,
-      };
-  
-      console.log("Пользовательские данные для сохранения:", userData);
-  
-      const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
-      
-      // Save user data in local storage
-      localStorage.setItem('user', JSON.stringify(response.data));
-      localStorage.setItem('userId', response.data.id);
-  
-      // Store the user ID and Telegram ID in a JSON format in local storage
-      const storedData = {
-        userId: response.data.id,
-        telegramId: response.data.telegram_id,
-        avatarId: response.data.related_avatar
-      };
-      localStorage.setItem('userData', JSON.stringify(storedData));
-  
-      setIsUserAuthorized(true);
-      setId(response.data.id);
-      navigate('/');
-    } catch (error) {
-      console.error('Ошибка при сохранении профиля:', error.response ? error.response.data : error.message);
-    }
+    const userId = await getNextAvailableId();
+    const userData = {
+      id: userId,
+      username: nickname || user?.username || 'default_username',
+      telegram_id: user?.id || null,
+      related_avatar: selectedAvatarId || 1, // Используем ID выбранного аватара
+      balance: 100,
+    };
+
+    const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
+    
+    // Save user data in local storage
+    const storedData = {
+      userId: response.data.id,
+      telegramId: response.data.telegram_id,
+      avatarId: response.data.related_avatar
+    };
+    localStorage.setItem('userData', JSON.stringify(storedData));
+
+    setIsUserAuthorized(true);
+    setId(response.data.id);
+    navigate('/');
   };
-  
 
   const getNextAvailableId = async () => {
     let id = 1;
     while (true) {
       try {
         await axios.get(`https://app.jettonwallet.com/api/v1/users/users/${id}/`);
-        // Если ID занят, продолжаем цикл
         id += 1;
       } catch (error) {
         if (error.response && error.response.status === 404) {
-          // Если ID не найден, возвращаем его
-          console.log(`ID ${id} свободен`);
           return id;
-        } else {
-          // Логируем другие ошибки
-          console.error(`Ошибка при проверке ID ${id}:`, error);
-          // Можем захотеть прекратить цикл при других ошибках
-          break;
         }
+        break;
       }
     }
-    // Если не удалось найти свободный ID, можно вернуть ошибку или значение по умолчанию
-    console.error('Не удалось найти свободный ID');
     return null;
   };
 
