@@ -12,6 +12,7 @@ function Stylesy() {
   const [selectedAvatarId, setSelectedAvatarId] = useState(null);
   const [nickname, setNickname] = useState('');
   const [avatars, setAvatars] = useState([]);
+  const [error, setError] = useState('');
   const user = useTelegramUser();
   const navigate = useNavigate();
   const { setIsUserAuthorized, setId } = useUserData();
@@ -24,8 +25,10 @@ function Stylesy() {
       navigate('/stylesy');
     }
 
-    if (user) {
+    if (user?.username) {
       setNickname(user.username);
+    }
+    if (user?.id) {
       setId(user.id);
     }
   }, [user, setId, navigate, setIsUserAuthorized]);
@@ -75,20 +78,42 @@ function Stylesy() {
     console.log('User data to be saved:', userData);
 
     try {
-      const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
+      // Check if user already exists
+      const existingUsersResponse = await axios.get('https://app.jettonwallet.com/api/v1/users/users/', {
+        params: {
+          telegram_id: user.id
+        }
+      });
 
-      const storedData = {
-        userId: response.data.id,
-        telegramId: response.data.telegram_id,
-        avatarId: response.data.related_avatar
-      };
-      localStorage.setItem('userData', JSON.stringify(storedData));
+      if (existingUsersResponse.data.count > 0) {
+        // User exists, log them in
+        const existingUser = existingUsersResponse.data.results[0];
+        setIsUserAuthorized(true);
+        setId(existingUser.id);
+        localStorage.setItem('userData', JSON.stringify({
+          userId: existingUser.id,
+          telegramId: existingUser.telegram_id,
+          avatarId: existingUser.related_avatar
+        }));
+        navigate('/stylesy');
+      } else {
+        // User does not exist, create a new one
+        const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
 
-      setIsUserAuthorized(true);
-      setId(response.data.id);
-      navigate('/stylesy');
+        const storedData = {
+          userId: response.data.id,
+          telegramId: response.data.telegram_id,
+          avatarId: response.data.related_avatar
+        };
+        localStorage.setItem('userData', JSON.stringify(storedData));
+
+        setIsUserAuthorized(true);
+        setId(response.data.id);
+        navigate('/stylesy');
+      }
     } catch (error) {
       console.error('Error saving user data:', error.response ? error.response.data : error.message);
+      setError(error.response ? error.response.data : error.message);
     }
   };
 
@@ -136,6 +161,7 @@ function Stylesy() {
       <div className='saved'>
         <button onClick={handleSave}><p>Save</p></button>
       </div>
+      {error && <div className='error'>{error}</div>}
     </div>
   );
 }
