@@ -56,16 +56,16 @@ function Stylesy() {
 
   const handleSave = async () => {
     console.log('Starting handleSave...');
-    const userId = await getNextAvailableId();
-    if (!userId) {
-      console.error('Failed to get next available ID');
+
+    if (!user?.id) {
+      console.error('Telegram ID is not available');
       return;
     }
 
     const userData = {
-      id: userId,
-      username: nickname || user?.username || 'default_username',
-      telegram_id: user?.id || null,
+      id: user.id,
+      username: nickname || user.username || 'default_username',
+      telegram_id: user.id,
       balance: 100,
       twitter_account: '',
       youtube_account: '',
@@ -91,24 +91,6 @@ function Stylesy() {
       navigate('/stylesy');
     } catch (error) {
       console.error('Error saving user data:', error.response ? error.response.data : error.message);
-    }
-  };
-
-  const getNextAvailableId = async () => {
-    console.log('Getting next available ID...');
-    let id = 1;
-    while (true) {
-      try {
-        await axios.get(`https://app.jettonwallet.com/api/v1/users/users/${id}/`);
-        id += 1;
-      } catch (error) {
-        if (error.response && error.response.status === 404) {
-          console.log('Next available ID:', id);
-          return id;
-        }
-        console.error('Error getting next available ID:', error.response ? error.response.data : error.message);
-        return null;
-      }
     }
   };
 
