@@ -84,11 +84,9 @@ function Stylesy() {
   
       setIsUserAuthorized(true);
       setId(response.data.id);
-      alert('Профиль сохранен успешно!');
       navigate('/');
     } catch (error) {
       console.error('Ошибка при сохранении профиля:', error.response ? error.response.data : error.message);
-      alert('Ошибка при сохранении профиля.');
     }
   };
   

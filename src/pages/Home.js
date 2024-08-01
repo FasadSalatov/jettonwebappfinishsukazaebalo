@@ -87,34 +87,43 @@ function Home() {
       return null;
     }
   };
-
+  
+  const updateUserBalance = async (userId, newBalance) => {
+    try {
+      await axios.patch(`https://app.jettonwallet.com/api/v1/users/users/${userId}/`, {
+        balance: newBalance,
+      });
+      console.log('Баланс обновлён на сервере');
+    } catch (error) {
+      console.error('Ошибка при обновлении баланса на сервере:', error);
+    }
+  };
+  
   const handleClaimClick = useCallback(async (taskId, coins) => {
     if (!taskId) {
       console.error('Task ID is undefined');
       return;
     }
-
+  
     const taskDetails = await fetchTaskDetails(taskId);
     if (taskDetails) {
       setTaskInfo(taskDetails);
       setShowModal(true);
-
+  
       // Обновляем баланс пользователя
       const newBalance = balance + coins;
       setBalance(newBalance); // Обновляем состояние локально
-
-      // Обновляем баланс на сервере через функцию updateBalance
-      try {
-        await updateBalance(newBalance);
-        console.log('Баланс обновлён на сервере');
-      } catch (error) {
-        console.error('Ошибка при обновлении баланса на сервере:', error);
-      }
-
+  
+      // Получаем ID пользователя из storedData
+      const userId = storedData.userId;
+  
+      // Обновляем баланс на сервере через функцию updateUserBalance
+      await updateUserBalance(userId, newBalance);
+  
       // Удаляем выполненную задачу из списка
       setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
     }
-  }, [balance, fetchTaskDetails, updateBalance]);
+  }, [balance, fetchTaskDetails, updateUserBalance]);
 
   const handleCloseModal = useCallback(() => {
     setShowModal(false);
