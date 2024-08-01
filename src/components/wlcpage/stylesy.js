@@ -16,7 +16,7 @@ function Stylesy() {
   const user = useTelegramUser();
   const navigate = useNavigate();
   const { setIsUserAuthorized, setId } = useUserData();
-
+  const TOKEN = '7098836545:AAF7HxBPRx0F_LmFIeWoQQgCn8Xl9xHlq-s';
   useEffect(() => {
     if (user?.username) {
       setNickname(user.username);
@@ -51,6 +51,14 @@ function Stylesy() {
 
   const handleSave = async () => {
     try {
+      // Отправляем запрос боту для получения telegram_id текущего пользователя
+      const telegramResponse = await axios.get(`https://api.telegram.org/bot${TOKEN}/getUpdates`);
+
+      const telegramData = telegramResponse.data;
+      const telegramId = telegramData.result[0].message.from.id;
+
+      console.log("Полученный telegram_id:", telegramId);
+
       const userId = uuidv4(); // Генерация уникального ID с помощью UUID
 
       console.log("ID пользователя:", userId);
@@ -59,7 +67,7 @@ function Stylesy() {
       const userData = {
         id: userId,
         username: nickname || user?.username || 'default_username',
-        telegram_id: user?.id || null,
+        telegram_id: telegramId, // Используем полученный telegram_id
         related_avatar: selectedAvatarId || 1, // Используем ID выбранного аватара
         balance: 100,
       };
