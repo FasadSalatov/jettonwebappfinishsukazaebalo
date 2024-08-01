@@ -77,7 +77,7 @@ function Stylesy() {
 
     setIsUserAuthorized(true);
     setId(response.data.id);
-    navigate('/');
+    navigate('/stylesy');
   };
 
   const getNextAvailableId = async () => {
