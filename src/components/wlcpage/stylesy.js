@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { v4 as uuidv4 } from 'uuid';
 import './wlc.css';
 import headavatar from './headavatar.png';
 import tst from './trst.png';
@@ -9,31 +10,21 @@ import { useNavigate } from 'react-router-dom';
 
 function Stylesy() {
   const [selectedAvatar, setSelectedAvatar] = useState(headavatar);
-  const [selectedAvatarId, setSelectedAvatarId] = useState(null);
+  const [selectedAvatarId, setSelectedAvatarId] = useState(null); // Сохраняем ID выбранного аватара
   const [nickname, setNickname] = useState('');
   const [avatars, setAvatars] = useState([]);
-  const [error, setError] = useState('');
   const user = useTelegramUser();
   const navigate = useNavigate();
   const { setIsUserAuthorized, setId } = useUserData();
 
   useEffect(() => {
-    // Проверка наличия данных в localStorage
-    const userData = JSON.parse(localStorage.getItem('userData'));
-    if (userData && userData.userId) {
-      setIsUserAuthorized(true);
-      setId(userData.userId);
-      navigate('/stylesy');
-    }
-
-    // Обновление состояния пользователя
     if (user?.username) {
       setNickname(user.username);
     }
     if (user?.id) {
       setId(user.id);
     }
-  }, [user, setId, navigate, setIsUserAuthorized]);
+  }, [user, setId]);
 
   useEffect(() => {
     const fetchAvatars = async () => {
@@ -41,7 +32,7 @@ function Stylesy() {
         const response = await axios.get('https://app.jettonwallet.com/api/v1/users/avatars/');
         const avatarsWithId = response.data.results.map((avatar, index) => ({
           ...avatar,
-          generatedId: index + 1
+          generatedId: index + 1 // Присваиваем новый ID, начиная с 1
         }));
         setAvatars(avatarsWithId);
       } catch (error) {
@@ -54,62 +45,48 @@ function Stylesy() {
 
   const handleAvatarClick = (avatar) => {
     setSelectedAvatar(avatar.image);
-    setSelectedAvatarId(avatar.generatedId);
+    setSelectedAvatarId(avatar.generatedId); // Используем сгенерированный ID
+    console.log("Выбранный аватар ID:", avatar.generatedId); // Логируем ID выбранного аватара
   };
 
   const handleSave = async () => {
-    if (!user?.id) {
-      console.error('Telegram ID is not available');
-      return;
-    }
-
-    const userData = {
-      id: user.id,
-      username: nickname || user.username || 'default_username',
-      telegram_id: user.id,
-      balance: 100,
-      twitter_account: '',
-      youtube_account: '',
-      remaining_invites: 10,
-      related_avatar: selectedAvatarId || 1,
-      related_languages: 0
-    };
-
     try {
-      // Проверка существования пользователя
-      const existingUsersResponse = await axios.get('https://app.jettonwallet.com/api/v1/users/users/', {
-        params: { telegram_id: user.id }
-      });
+      const userId = uuidv4(); // Генерация уникального ID с помощью UUID
 
-      if (existingUsersResponse.data.count > 0) {
-        // Пользователь существует, авторизация
-        const existingUser = existingUsersResponse.data.results[0];
-        setIsUserAuthorized(true);
-        setId(existingUser.id);
-        localStorage.setItem('userData', JSON.stringify({
-          userId: existingUser.id,
-          telegramId: existingUser.telegram_id,
-          avatarId: existingUser.related_avatar
-        }));
-        navigate('/stylesy');
-      } else {
-        // Пользователь не существует, создание нового
-        const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
+      console.log("ID пользователя:", userId);
+      console.log("ID выбранного аватара перед сохранением:", selectedAvatarId);
 
-        const storedData = {
-          userId: response.data.id,
-          telegramId: response.data.telegram_id,
-          avatarId: response.data.related_avatar
-        };
-        localStorage.setItem('userData', JSON.stringify(storedData));
+      const userData = {
+        id: userId,
+        username: nickname || user?.username || 'default_username',
+        telegram_id: user?.id || null,
+        related_avatar: selectedAvatarId || 1, // Используем ID выбранного аватара
+        balance: 100,
+      };
 
-        setIsUserAuthorized(true);
-        setId(response.data.id);
-        navigate('/stylesy');
-      }
+      console.log("Пользовательские данные для сохранения:", userData);
+
+      const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
+      
+      // Save user data in local storage
+      localStorage.setItem('user', JSON.stringify(response.data));
+      localStorage.setItem('userId', response.data.id);
+
+      // Store the user ID and Telegram ID in a JSON format in local storage
+      const storedData = {
+        userId: response.data.id,
+        telegramId: response.data.telegram_id,
+        avatarId: response.data.related_avatar
+      };
+      localStorage.setItem('userData', JSON.stringify(storedData));
+
+      setIsUserAuthorized(true);
+      setId(response.data.id);
+      
+      navigate('/');
     } catch (error) {
-      console.error('Error saving user data:', error.response ? error.response.data : error.message);
-      setError(error.response ? error.response.data : error.message);
+      console.error('Ошибка при сохранении профиля:', error.response ? error.response.data : error.message);
+      alert('Ошибка при сохранении профиля.');
     }
   };
 
@@ -139,7 +116,7 @@ function Stylesy() {
           {avatars.length > 0 ? (
             avatars.map((avatar) => (
               <button
-                key={avatar.generatedId}
+                key={avatar.generatedId} // Используем сгенерированный ID
                 className={`avatar-button ${selectedAvatar === avatar.image ? 'selected' : ''}`}
                 onClick={() => handleAvatarClick(avatar)}
               >
@@ -157,7 +134,6 @@ function Stylesy() {
       <div className='saved'>
         <button onClick={handleSave}><p>Save</p></button>
       </div>
-      {error && <div className='error'>{error}</div>}
     </div>
   );
 }
