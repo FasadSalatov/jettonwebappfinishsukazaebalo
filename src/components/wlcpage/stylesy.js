@@ -55,7 +55,13 @@ function Stylesy() {
   };
 
   const handleSave = async () => {
+    console.log('Starting handleSave...');
     const userId = await getNextAvailableId();
+    if (!userId) {
+      console.error('Failed to get next available ID');
+      return;
+    }
+
     const userData = {
       id: userId,
       username: nickname || user?.username || 'default_username',
@@ -67,6 +73,8 @@ function Stylesy() {
       related_avatar: selectedAvatarId || 1,
       related_languages: 0
     };
+
+    console.log('User data to be saved:', userData);
 
     try {
       const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
@@ -82,11 +90,12 @@ function Stylesy() {
       setId(response.data.id);
       navigate('/stylesy');
     } catch (error) {
-      console.error('Error saving user data:', error);
+      console.error('Error saving user data:', error.response ? error.response.data : error.message);
     }
   };
 
   const getNextAvailableId = async () => {
+    console.log('Getting next available ID...');
     let id = 1;
     while (true) {
       try {
@@ -94,13 +103,13 @@ function Stylesy() {
         id += 1;
       } catch (error) {
         if (error.response && error.response.status === 404) {
+          console.log('Next available ID:', id);
           return id;
         }
-        console.error('Error getting next available ID:', error);
-        break;
+        console.error('Error getting next available ID:', error.response ? error.response.data : error.message);
+        return null;
       }
     }
-    return null;
   };
 
   return (
