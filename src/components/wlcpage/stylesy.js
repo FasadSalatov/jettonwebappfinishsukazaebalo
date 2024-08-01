@@ -22,7 +22,7 @@ function Stylesy() {
     if (userData && userData.userId) {
       setIsUserAuthorized(true);
       setId(userData.userId);
-      navigate('/');
+      navigate('/stylesy');
     }
 
     if (user?.username) {
@@ -77,7 +77,7 @@ function Stylesy() {
 
     setIsUserAuthorized(true);
     setId(response.data.id);
-    navigate('/');
+    navigate('/stylesy');
   };
 
   const getNextAvailableId = async () => {
