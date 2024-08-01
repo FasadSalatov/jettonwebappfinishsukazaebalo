@@ -11,6 +11,8 @@ const useTelegramUser = () => {
     const userData = tg.initDataUnsafe?.user;
 
     if (userData) {
+      console.log('User data from Telegram:', userData); // Логирование для отладки
+
       setUser({
         firstName: userData.first_name || '',
         lastName: userData.last_name || '',
@@ -18,6 +20,8 @@ const useTelegramUser = () => {
         languageCode: userData.language_code || '',
         id: userData.id || '', // Проверка наличия id
       });
+    } else {
+      console.warn('User data not available');
     }
   }, []);
 

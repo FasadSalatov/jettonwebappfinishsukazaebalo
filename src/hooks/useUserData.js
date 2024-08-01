@@ -17,7 +17,7 @@ const useUserData = () => {
   const fetchTasks = async (page, filter = 'all') => {
     try {
       setIsLoading(true);
-  
+
       const limit = 10;
       const offset = (page - 1) * limit;
       const url = filter === 'all' ? 
@@ -26,7 +26,7 @@ const useUserData = () => {
       const tasksResponse = await axios.get(url);
       const tasksData = tasksResponse.data;
       const { results, next } = tasksData;
-  
+
       if (results.length > 0) {
         setTasks(prevTasks => Array.isArray(prevTasks) ? [...prevTasks, ...results] : [...results]);
         setHasMoreTasks(!!next);
@@ -51,7 +51,7 @@ const useUserData = () => {
           setBalance(user.balance);
           setAvatar(user.related_avatar ? avatars.find(avatar => avatar.id === user.related_avatar)?.image : '');
 
-          const referralsResponse = await axios.get(`https://app.jettonwallet.com/api/v1/users/${user.id}/referrals/`);
+          const referralsResponse = await axios.get(`https://app.jettonwallet.com/api/v1/users/referrals/${user.id}`);
           setReferralsCount(referralsResponse.data.results.length);
         }
       } catch (error) {
@@ -110,7 +110,7 @@ const useUserData = () => {
     setId,
     fetchTasks,
     setTasks,
-    updateBalance, // Возвращаем updateBalance
+    updateBalance,
   };
 };
 

@@ -18,6 +18,7 @@ function Stylesy() {
   const { setIsUserAuthorized, setId } = useUserData();
 
   useEffect(() => {
+    // Проверка наличия данных в localStorage
     const userData = JSON.parse(localStorage.getItem('userData'));
     if (userData && userData.userId) {
       setIsUserAuthorized(true);
@@ -25,6 +26,7 @@ function Stylesy() {
       navigate('/stylesy');
     }
 
+    // Обновление состояния пользователя
     if (user?.username) {
       setNickname(user.username);
     }
@@ -56,8 +58,6 @@ function Stylesy() {
   };
 
   const handleSave = async () => {
-    console.log('Starting handleSave...');
-
     if (!user?.id) {
       console.error('Telegram ID is not available');
       return;
@@ -75,18 +75,14 @@ function Stylesy() {
       related_languages: 0
     };
 
-    console.log('User data to be saved:', userData);
-
     try {
-      // Check if user already exists
+      // Проверка существования пользователя
       const existingUsersResponse = await axios.get('https://app.jettonwallet.com/api/v1/users/users/', {
-        params: {
-          telegram_id: user.id
-        }
+        params: { telegram_id: user.id }
       });
 
       if (existingUsersResponse.data.count > 0) {
-        // User exists, log them in
+        // Пользователь существует, авторизация
         const existingUser = existingUsersResponse.data.results[0];
         setIsUserAuthorized(true);
         setId(existingUser.id);
@@ -97,7 +93,7 @@ function Stylesy() {
         }));
         navigate('/stylesy');
       } else {
-        // User does not exist, create a new one
+        // Пользователь не существует, создание нового
         const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
 
         const storedData = {
