@@ -22,6 +22,7 @@ function Home() {
     setIsLoading,
     updateBalance // используем функцию из хука
   } = useUserData();
+  const [friendsCount, setFriendsCount] = useState(0);
   const [userData, setUserData] = useState(null);
   const [balance, setBalance] = useState(0);
   const [referralsCount, setReferralsCount] = useState(0);
@@ -54,6 +55,9 @@ function Home() {
             const avatarResponse = await axios.get(`https://app.jettonwallet.com/api/v1/users/avatars/${user.related_avatar}/`);
             setAvatarImage(avatarResponse.data.image);
           }
+          
+          const referralsResponse = await axios.get('https://app.jettonwallet.com/api/v1/users/referrals/');
+          setFriendsCount(referralsResponse.data.results.length);
         } catch (error) {
           console.error('Ошибка при загрузке данных пользователя:', error);
         }
@@ -199,7 +203,7 @@ function Home() {
                 <p>{username}</p>
               </span>
               <span className='frenhead'>
-                <p>{referralsCount} friends</p>
+                <p>{friendsCount} friends</p>
               </span>
             </span>
             <span className='headbtns'>
