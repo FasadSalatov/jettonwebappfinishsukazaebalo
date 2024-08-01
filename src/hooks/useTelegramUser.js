@@ -14,7 +14,7 @@ const useTelegramUser = () => {
       lastName: tg.initDataUnsafe?.user?.last_name || '',
       username: tg.initDataUnsafe?.user?.username || '',
       languageCode: tg.initDataUnsafe?.user?.language_code || '',
-      userId: tg.initDataUnsafe?.user?.id || '',
+      id: tg.initDataUnsafe?.user?.id || '', // Изменено на id
     };
 
     setUser(userData);
