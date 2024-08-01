@@ -60,8 +60,12 @@ function Stylesy() {
       id: userId,
       username: nickname || user?.username || 'default_username',
       telegram_id: user?.id || null,
-      related_avatar: selectedAvatarId || 1,
       balance: 100,
+      twitter_account: '',
+      youtube_account: '',
+      remaining_invites: 10,
+      related_avatar: selectedAvatarId || 1,
+      related_languages: 0
     };
 
     try {
