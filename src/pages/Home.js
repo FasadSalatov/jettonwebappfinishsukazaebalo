@@ -109,7 +109,7 @@ function Home() {
     if (taskDetails) {
       setTaskInfo(taskDetails);
       setShowModal(true);
-  
+      const storedData = JSON.parse(localStorage.getItem('userData'));
       // Обновляем баланс пользователя
       const newBalance = balance + coins;
       setBalance(newBalance); // Обновляем состояние локально
