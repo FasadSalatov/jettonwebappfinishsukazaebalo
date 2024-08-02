@@ -68,7 +68,7 @@ function Stylesy() {
       };
 
       console.log("Пользовательские данные для сохранения:", userData);
-
+      localStorage.setItem('userData', JSON.stringify(storedData));
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('userId', userId);
 
@@ -80,7 +80,7 @@ function Stylesy() {
       };
       localStorage.setItem('userData', JSON.stringify(storedData));
 
-      setIsUserAuthorized(true);
+      setIsUserAuthorized(userId); // Сохраняем ID пользователя в состоянии авторизации
       setId(userId);
       
       navigate('/'); // Перенаправляем на главную страницу
