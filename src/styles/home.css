@@ -742,12 +742,16 @@ flex-grow: 0;
     background-color: #b8b8b8 !important;
 }
 
+.amg {
+    border-radius: 100%;
+}
+
 .tasking img {
 
     margin-left: -15%;
     height: 36px;
     width: 36px;
-    border-radius: 100%;
+    
 }
 
 .tskimg {
