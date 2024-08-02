@@ -68,7 +68,7 @@ function Contact() {
     }, []);
 
     const handleCopyClick = () => {
-        const telegramId = JSON.parse(localStorage.getItem('storedData'))?.telegramId;
+        const telegramId = JSON.parse(localStorage.getItem('userData'))?.telegramId;
         const referralLink = `https://t.me/JettoCoins_bot/JettonWallet?start=${telegramId}`;
 
         navigator.clipboard.writeText(referralLink)
@@ -160,7 +160,7 @@ function Contact() {
                     <button className='shareclaimbtn' onClick={handleCopyClick}>
                         <p>Copy</p>
                     </button>
-                    <Link to={`https://telegram.me/share/url?url=https://t.me/JettoCoins_bot/JettonWallet?start=${JSON.parse(localStorage.getItem('storedData'))?.telegramId}`}>
+                    <Link to={`https://telegram.me/share/url?url=https://t.me/JettoCoins_bot/JettonWallet?start=${JSON.parse(localStorage.getItem('userData'))?.telegramId}`}>
                         <button className='sharebtn'>
                             <p>Share</p>
                         </button>
