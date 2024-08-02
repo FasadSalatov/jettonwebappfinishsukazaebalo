@@ -80,7 +80,7 @@ function Stylesy() {
       };
       localStorage.setItem('userData', JSON.stringify(storedData));
 
-      setIsUserAuthorized(true);
+      setIsUserAuthorized(userId); // Сохраняем ID пользователя в состоянии авторизации
       setId(userId);
       
       navigate('/'); // Перенаправляем на главную страницу
