@@ -9,12 +9,11 @@ import fotlogo2 from '../imgs/fotlogo2.svg';
 import fotlogo3 from '../imgs/fotlogo3.svg';
 import Modal from '../components/modal2.js';
 import '../components/wlcpage/modal2.css';
-import axios from 'axios'; // Используем axios для выполнения запросов
+import axios from 'axios';
 
-// Функция для получения рефералов
 const fetchReferrals = async (page) => {
-    const limit = 10; // Количество элементов на страницу
-    const offset = (page - 1) * limit; // Смещение для пагинации
+    const limit = 10;
+    const offset = (page - 1) * limit;
     try {
         const response = await axios.get(`https://app.jettonwallet.com/api/v1/users/referrals/?limit=${limit}&offset=${offset}`);
         return response.data.results;
@@ -33,6 +32,7 @@ function Contact() {
     const [isLoading, setIsLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [page, setPage] = useState(1);
+    const [claimableCoins, setClaimableCoins] = useState(1000000);
 
     const fetchData = async (page) => {
         setIsLoading(true);
@@ -53,8 +53,25 @@ function Contact() {
         fetchData(page);
     }, [page]);
 
+    useEffect(() => {
+        const storedTasksVisible = JSON.parse(localStorage.getItem('tasksVisible'));
+        if (storedTasksVisible !== null) {
+            setTasksVisible(storedTasksVisible);
+        }
+    }, []);
+
+    useEffect(() => {
+        const storedClaimableCoins = JSON.parse(localStorage.getItem('claimableCoins'));
+        if (storedClaimableCoins !== null) {
+            setClaimableCoins(storedClaimableCoins);
+        }
+    }, []);
+
     const handleCopyClick = () => {
-        navigator.clipboard.writeText('https://t.me/FasadFinder_bot/JettoCoin')
+        const telegramId = JSON.parse(localStorage.getItem('storedData'))?.telegramId;
+        const referralLink = `https://t.me/JettoCoins_bot/JettonWallet?start=${telegramId}`;
+
+        navigator.clipboard.writeText(referralLink)
             .then(() => {
                 setShowModal(true);
             })
@@ -72,7 +89,11 @@ function Contact() {
         localStorage.setItem('tasksVisible', JSON.stringify(false));
     };
 
-    // Функция для подгрузки данных при скролле
+    const handleClaimClick = () => {
+        setClaimableCoins(0);
+        localStorage.setItem('claimableCoins', 0);
+    };
+
     const scrollRef = useRef(null);
 
     useEffect(() => {
@@ -125,8 +146,8 @@ function Contact() {
                 <div className='nae'>
                     <p className='refh1'>Available for the claim</p>
                     <span className='headbtnsref'>
-                        <p className='refhh1'>1 000 000 coins</p>
-                        <button className='btnref'>
+                        <p className='refhh1'>{claimableCoins} coins</p>
+                        <button className={`btnref ${claimableCoins === 0 ? 'markup' : ''}`} onClick={handleClaimClick}>
                             <p>Claim</p>
                         </button>
                     </span>
@@ -139,7 +160,7 @@ function Contact() {
                     <button className='shareclaimbtn' onClick={handleCopyClick}>
                         <p>Copy</p>
                     </button>
-                    <Link to='https://telegram.me/share/url?url=https://t.me/FasadFinder_bot/JettoCoin'>
+                    <Link to={`https://telegram.me/share/url?url=https://t.me/JettoCoins_bot/JettonWallet?start=${JSON.parse(localStorage.getItem('storedData'))?.telegramId}`}>
                         <button className='sharebtn'>
                             <p>Share</p>
                         </button>
