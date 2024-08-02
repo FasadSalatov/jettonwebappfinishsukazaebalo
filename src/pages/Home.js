@@ -15,13 +15,12 @@ import useUserData from '../hooks/useUserData.js';
 import axios from 'axios';
 
 function Home() {
-  const { 
-    tasks, 
-    setTasks, 
-    isLoading, 
-    hasMoreTasks, 
-    setIsLoading,
-    updateBalance // используем функцию из хука
+  const {
+    tasks,
+    setTasks,
+    isLoading,
+    hasMoreTasks,
+    setIsLoading
   } = useUserData();
   const [friendsCount, setFriendsCount] = useState(0);
   const [userData, setUserData] = useState(null);
@@ -38,6 +37,7 @@ function Home() {
   const { tasksVisible, handleHideTasks } = useTaskContext();
   const [springProps] = useSpring(() => ({ y: 0, config: { tension: 300, friction: 20 } }));
   const scrollRef = useRef(null);
+  const [completedTasks, setCompletedTasks] = useState([]);
 
   // Fetch user data based on stored ID
   useEffect(() => {
@@ -56,7 +56,7 @@ function Home() {
             const avatarResponse = await axios.get(`https://app.jettonwallet.com/api/v1/users/avatars/${user.related_avatar}/`);
             setAvatarImage(avatarResponse.data.image);
           }
-          
+
           const referralsResponse = await axios.get('https://app.jettonwallet.com/api/v1/users/referrals/');
           setFriendsCount(referralsResponse.data.results.length);
         } catch (error) {
@@ -65,7 +65,16 @@ function Home() {
       };
       fetchUserData();
     }
+
+    // Загружаем выполненные задачи из localStorage
+    const completedTasksFromStorage = JSON.parse(localStorage.getItem('completedTasks')) || [];
+    setCompletedTasks(completedTasksFromStorage);
   }, []);
+
+  // Сохраняем выполненные задачи в localStorage при изменении
+  useEffect(() => {
+    localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+  }, [completedTasks]);
 
   // Fetch tasks
   useEffect(() => {
@@ -92,7 +101,7 @@ function Home() {
       return null;
     }
   };
-  
+
   const updateUserBalance = async (userId, newBalance) => {
     try {
       await axios.patch(`https://app.jettonwallet.com/api/v1/users/users/${userId}/`, {
@@ -103,32 +112,38 @@ function Home() {
       console.error('Ошибка при обновлении баланса на сервере:', error);
     }
   };
-  
+
   const handleClaimClick = useCallback(async (taskId, coins) => {
     if (!taskId) {
       console.error('Task ID is undefined');
       return;
     }
-  
+
+    if (completedTasks.includes(taskId)) {
+      console.log('Task already completed');
+      return;
+    }
+
     const taskDetails = await fetchTaskDetails(taskId);
     if (taskDetails) {
       setTaskInfo(taskDetails);
       setShowModal(true);
       const storedData = JSON.parse(localStorage.getItem('userData'));
+
       // Обновляем баланс пользователя
       const newBalance = balance + coins;
       setBalance(newBalance); // Обновляем состояние локально
-  
+
       // Получаем ID пользователя из storedData
       const userId = storedData.userId;
-  
+
       // Обновляем баланс на сервере через функцию updateUserBalance
       await updateUserBalance(userId, newBalance);
-  
-      // Удаляем выполненную задачу из списка
-      setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+
+      // Добавляем выполненную задачу в список
+      setCompletedTasks((prevCompletedTasks) => [...prevCompletedTasks, taskId]);
     }
-  }, [balance, fetchTaskDetails, updateUserBalance]);
+  }, [balance, fetchTaskDetails, updateUserBalance, completedTasks]);
 
   const handleCloseModal = useCallback(() => {
     setShowModal(false);
@@ -213,7 +228,7 @@ function Home() {
               {wallet ? (
                 <div className='wallet-container'>
                   <button className='wallet-button' onClick={handleWalletClick}>
-                    {maskWallet(userFriendlyAddress)}<img src={wltlogo} alt=''/>
+                    {maskWallet(userFriendlyAddress)}<img src={wltlogo} alt='' />
                   </button>
                   <div className='coins'>
                     <p>{balance} coins</p>
@@ -250,7 +265,7 @@ function Home() {
         {tasksVisible && (
           <div className='tasks'>
             <h1>
-              Tasks 
+              Tasks
               <button onClick={handleHideTasks} className='close-btn'>×</button>
             </h1>
             <p>Some text Some text Some text Some text Some text Some text</p>
@@ -279,16 +294,22 @@ function Home() {
             style={{ transform: springProps.y.to(y => `translateY(${y}px)`) }}
           >
             {filteredTasks.map(task => (
-              <div className='tasking' key={task.id}>
+              <div className={`tasking ${completedTasks.includes(task.id) ? 'successed' : ''}`} key={task.id}>
                 <img className='tskimg' src={tg} alt='Telegram' />
                 <div className='tskk'>
                   <p className='tsk'>{task.description}</p>
                 </div>
                 <div className='valuetask'>
-                  <button className='claimbtn' onClick={() => handleClaimClick(task.id, task.points)}><p>{task.points} coins</p></button>
+                  <button
+                    className={`claimbtn ${completedTasks.includes(task.id) ? 'markup' : ''}`}
+                    onClick={() => handleClaimClick(task.id, task.points)}
+                  >
+                    <p>{task.points} coins</p>
+                  </button>
                 </div>
               </div>
             ))}
+
             {isLoading && <p>Loading more tasks...</p>}
             {!hasMoreTasks && <p></p>}
           </animated.div>
@@ -297,9 +318,9 @@ function Home() {
         </div>
         <div className='fot'>
           <div className='fotcont'>
-            <Link to='/'><button className='activebtn'><img src={fotlogo} alt='Home'/></button></Link>
-            <Link to='/Contact'><button ><img src={fotlogo2} alt='Contact'/></button></Link>
-            <Link to='/about'><button><img src={fotlogo3} alt='About'/></button></Link>
+            <Link to='/'><button className='activebtn'><img src={fotlogo} alt='Home' /></button></Link>
+            <Link to='/Contact'><button ><img src={fotlogo2} alt='Contact' /></button></Link>
+            <Link to='/about'><button><img src={fotlogo3} alt='About' /></button></Link>
           </div>
         </div>
       </div>

@@ -738,6 +738,10 @@ flex-grow: 0;
 
 }
 
+.markup {
+    background-color: #b8b8b8 !important;
+}
+
 .tasking img {
 
     margin-left: -15%;
