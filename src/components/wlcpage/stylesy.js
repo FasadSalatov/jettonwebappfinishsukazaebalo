@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { v4 as uuidv4 } from 'uuid';
 import './wlc.css';
 import headavatar from './headavatar.png';
 import tst from './trst.png';
@@ -8,32 +9,22 @@ import useUserData from '../../hooks/useUserData';
 import { useNavigate } from 'react-router-dom';
 
 function Stylesy() {
-  
   const [selectedAvatar, setSelectedAvatar] = useState(headavatar);
-  const [selectedAvatarId, setSelectedAvatarId] = useState(null);
+  const [selectedAvatarId, setSelectedAvatarId] = useState(null); // Сохраняем ID выбранного аватара
   const [nickname, setNickname] = useState('');
   const [avatars, setAvatars] = useState([]);
   const user = useTelegramUser();
   const navigate = useNavigate();
   const { setIsUserAuthorized, setId } = useUserData();
-
+  const TOKEN = '7098836545:AAF7HxBPRx0F_LmFIeWoQQgCn8Xl9xHlq-s';
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('userData'));
-    if (!userData) {
-      // Если данных пользователя нет в localStorage, сбрасываем авторизацию
-      setIsUserAuthorized(false);
-      setId(null);
-    } else {
-      // Если данные пользователя есть, устанавливаем их в состоянии
-      setId(userData.userId);
-      setIsUserAuthorized(true);
-    }
-
-    if (user) {
+    if (user?.username) {
       setNickname(user.username);
+    }
+    if (user?.id) {
       setId(user.id);
     }
-  }, [user, setId, navigate, setIsUserAuthorized]);
+  }, [user, setId]);
 
   useEffect(() => {
     const fetchAvatars = async () => {
@@ -41,7 +32,7 @@ function Stylesy() {
         const response = await axios.get('https://app.jettonwallet.com/api/v1/users/avatars/');
         const avatarsWithId = response.data.results.map((avatar, index) => ({
           ...avatar,
-          generatedId: index + 1
+          generatedId: index + 1 // Присваиваем новый ID, начиная с 1
         }));
         setAvatars(avatarsWithId);
       } catch (error) {
@@ -54,57 +45,58 @@ function Stylesy() {
 
   const handleAvatarClick = (avatar) => {
     setSelectedAvatar(avatar.image);
-    setSelectedAvatarId(avatar.generatedId);
+    setSelectedAvatarId(avatar.generatedId); // Используем сгенерированный ID
+    console.log("Выбранный аватар ID:", avatar.generatedId); // Логируем ID выбранного аватара
   };
 
   const handleSave = async () => {
-    console.log('Starting handleSave...');
-  
-    if (!user?.id) {
-      console.error('Telegram ID is not available');
-      return;
-    }
-  
-    // Заполняем данные для отправки
-    const userData = {
-      username: nickname || user.username || 'default_username', // Имя пользователя
-      telegram_id: user.id, // Telegram ID
-      balance: 100, // Баланс (можно изменить по необходимости)
-      twitter_account: '', // Twitter аккаунт (по умолчанию пусто)
-      youtube_account: '', // YouTube аккаунт (по умолчанию пусто)
-      remaining_invites: 10, // Оставшиеся приглашения
-      related_avatar: selectedAvatarId || 1, // Идентификатор аватара
-      related_languages: 0 // Идентификатор языков (по умолчанию 0)
-    };
-  
-    console.log('User data to be saved:', userData);
-  
     try {
-      // Отправляем запрос на сервер для сохранения данных пользователя
+      // Отправляем запрос боту для получения telegram_id текущего пользователя
+      const telegramResponse = await axios.get(`https://api.telegram.org/bot${TOKEN}/getUpdates`);
+
+      const telegramData = telegramResponse.data;
+      const telegramId = telegramData.result[0].message.from.id;
+
+      console.log("Полученный telegram_id:", telegramId);
+
+      const userId = uuidv4(); // Генерация уникального ID с помощью UUID
+
+      console.log("ID пользователя:", userId);
+      console.log("ID выбранного аватара перед сохранением:", selectedAvatarId);
+
+      const userData = {
+        id: userId,
+        username: nickname || user?.username || 'default_username',
+        telegram_id: telegramId, // Используем полученный telegram_id
+        related_avatar: selectedAvatarId || 1, // Используем ID выбранного аватара
+        balance: 100,
+      };
+
+      console.log("Пользовательские данные для сохранения:", userData);
+
       const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
-  
-      // Логгируем ответ от сервера
-      console.log('Response from server:', response);
-  
-      // Сохраняем данные пользователя в localStorage
+      
+      // Save user data in local storage
+      localStorage.setItem('user', JSON.stringify(response.data));
+      localStorage.setItem('userId', response.data.id);
+
+      // Store the user ID and Telegram ID in a JSON format in local storage
       const storedData = {
         userId: response.data.id,
         telegramId: response.data.telegram_id,
         avatarId: response.data.related_avatar
       };
       localStorage.setItem('userData', JSON.stringify(storedData));
-  
-      // Обновляем состояние авторизации и идентификатор пользователя
+
       setIsUserAuthorized(true);
       setId(response.data.id);
-  
-      // Перенаправляем пользователя на главную страницу
+      
       navigate('/');
     } catch (error) {
-      console.error('Error saving user data:', error.response ? error.response.data : error.message);
+      console.error('Ошибка при сохранении профиля:', error.response ? error.response.data : error.message);
+      alert('Ошибка при сохранении профиля.');
     }
   };
-  
 
   return (
     <div className='wrapper'>
@@ -132,7 +124,7 @@ function Stylesy() {
           {avatars.length > 0 ? (
             avatars.map((avatar) => (
               <button
-                key={avatar.generatedId}
+                key={avatar.generatedId} // Используем сгенерированный ID
                 className={`avatar-button ${selectedAvatar === avatar.image ? 'selected' : ''}`}
                 onClick={() => handleAvatarClick(avatar)}
               >
