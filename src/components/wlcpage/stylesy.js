@@ -16,7 +16,7 @@ function Stylesy() {
   const user = useTelegramUser();
   const navigate = useNavigate();
   const { setIsUserAuthorized, setId } = useUserData();
-
+  const TOKEN = '7098836545:AAF7HxBPRx0F_LmFIeWoQQgCn8Xl9xHlq-s';
   useEffect(() => {
     if (user?.username) {
       setNickname(user.username);
