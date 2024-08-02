@@ -13,6 +13,7 @@ import { useTaskContext } from '../context/TaskContext';
 import { TonConnectUIProvider, useTonConnectUI, useTonWallet, useTonAddress } from '@tonconnect/ui-react';
 import useUserData from '../hooks/useUserData.js';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 function Home() {
   const {
@@ -22,6 +23,7 @@ function Home() {
     hasMoreTasks,
     setIsLoading
   } = useUserData();
+  const navigate = useNavigate();
   const [friendsCount, setFriendsCount] = useState(0);
   const [userData, setUserData] = useState(null);
   const [balance, setBalance] = useState(0);
@@ -39,6 +41,12 @@ function Home() {
   const scrollRef = useRef(null);
   const [completedTasks, setCompletedTasks] = useState([]);
 
+
+  const goToStylesy = () => {
+    localStorage.removeItem('userData'); // Удаление данных пользователя
+    
+    navigate('/stylesy');
+  };
   // Fetch user data based on stored ID
   useEffect(() => {
     const storedData = JSON.parse(localStorage.getItem('userData'));
@@ -215,7 +223,7 @@ function Home() {
           <div className='nae'>
             <span className='nameava'>
               <span className='imgheader'>
-                <Link to='/stylesy'>
+                <Link to='/stylesy' onClick={goToStylesy}>
                   <img src={avatarImage} alt='Avatar' />
                 </Link>
                 <p>{username}</p>
