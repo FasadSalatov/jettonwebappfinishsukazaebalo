@@ -51,6 +51,14 @@ function Stylesy() {
 
   const handleSave = async () => {
     try {
+      // Отправляем запрос боту для получения telegram_id текущего пользователя
+      const telegramResponse = await axios.get(`https://api.telegram.org/bot${TOKEN}/getUpdates`);
+
+      const telegramData = telegramResponse.data;
+      const telegramId = telegramData.result[0].message.from.id;
+
+      console.log("Полученный telegram_id:", telegramId);
+
       const userId = uuidv4(); // Генерация уникального ID с помощью UUID
 
       console.log("ID пользователя:", userId);
@@ -59,7 +67,7 @@ function Stylesy() {
       const userData = {
         id: userId,
         username: nickname || user?.username || 'default_username',
-        telegram_id: user?.id || null,
+        telegram_id: telegramId, // Используем полученный telegram_id
         related_avatar: selectedAvatarId || 1, // Используем ID выбранного аватара
         balance: 100,
       };
@@ -79,13 +87,6 @@ function Stylesy() {
         avatarId: response.data.related_avatar
       };
       localStorage.setItem('userData', JSON.stringify(storedData));
-
-      // Send message to the Telegram bot
-      const message = `Новый пользователь зарегистрирован:\n\nID: ${response.data.id}\nUsername: ${response.data.username}\nTelegram ID: ${response.data.telegram_id}\nAvatar ID: ${response.data.related_avatar}`;
-      await axios.post(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-        chat_id: YOUR_CHAT_ID, // Замените на ID чата, в который будет отправлено сообщение
-        text: message
-      });
 
       setIsUserAuthorized(true);
       setId(response.data.id);
