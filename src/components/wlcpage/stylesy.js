@@ -55,13 +55,13 @@ function Stylesy() {
   const handleSave = async () => {
     console.log('Starting handleSave...');
 
-    if (!user?.id) {
+    if (!user || !user.id) {
       console.error('Telegram ID is not available');
-      return;
+      
     }
 
+    // Данные для отправки на сервер без поля `id`
     const userData = {
-      id: user.id,
       username: nickname || user.username || 'default_username',
       telegram_id: user.id,
       balance: 100,
@@ -69,7 +69,7 @@ function Stylesy() {
       youtube_account: '',
       remaining_invites: 10,
       related_avatar: selectedAvatarId || 1,
-      related_languages: 0
+      
     };
 
     console.log('User data to be saved:', userData);
@@ -77,15 +77,16 @@ function Stylesy() {
     try {
       const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
 
+      // Сохраняем в localStorage новый ID, возвращенный сервером
       const storedData = {
-        userId: response.data.id,
-        telegramId: response.data.telegram_id,
+        userId: response.data.id, // Новый ID, назначенный сервером
+        telegramId: user.id, // Telegram ID остается прежним
         avatarId: response.data.related_avatar
       };
       localStorage.setItem('userData', JSON.stringify(storedData));
 
       setIsUserAuthorized(true);
-      setId(response.data.id);
+      setId(response.data.id); // Устанавливаем новый ID в состояние
       navigate('/stylesy');
     } catch (error) {
       console.error('Error saving user data:', error.response ? error.response.data : error.message);
