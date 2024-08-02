@@ -54,13 +54,12 @@ function Stylesy() {
 
   const handleSave = async () => {
     console.log('Starting handleSave...');
-
+  
     if (!user || !user.id) {
       console.error('Telegram ID is not available');
-      
+      return;
     }
-
-    // Данные для отправки на сервер без поля `id`
+  
     const userData = {
       username: nickname || user.username || 'default_username',
       telegram_id: user.id,
@@ -69,30 +68,49 @@ function Stylesy() {
       youtube_account: '',
       remaining_invites: 10,
       related_avatar: selectedAvatarId || 1,
-      
     };
-
+  
     console.log('User data to be saved:', userData);
-
+  
     try {
-      const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
-
-      // Сохраняем в localStorage новый ID, возвращенный сервером
-      const storedData = {
-        userId: response.data.id, // Новый ID, назначенный сервером
-        telegramId: user.id, // Telegram ID остается прежним
-        avatarId: response.data.related_avatar
-      };
-      localStorage.setItem('userData', JSON.stringify(storedData));
-
-      setIsUserAuthorized(true);
-      setId(response.data.id); // Устанавливаем новый ID в состояние
+      // Check if the user already exists in the database
+      const response = await axios.get(`https://app.jettonwallet.com/api/v1/users/users/?telegram_id=${user.id}`);
+      const existingUser = response.data.results[0];
+  
+      if (existingUser) {
+        // User already exists, update the existing user
+        await axios.patch(`https://app.jettonwallet.com/api/v1/users/users/${existingUser.id}/`, { related_avatar: userData.related_avatar });
+  
+        // Update the storedData with the new avatar ID
+        const storedData = {
+          userId: existingUser.id,
+          telegramId: user.id,
+          avatarId: userData.related_avatar,
+        };
+        localStorage.setItem('userData', JSON.stringify(storedData));
+        
+        console.log('User data updated:', storedData);
+      } else {
+        // New user registration
+        const createResponse = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
+        
+        const newStoredData = {
+          userId: createResponse.data.id, // New ID from the server
+          telegramId: user.id,
+          avatarId: createResponse.data.related_avatar,
+        };
+        localStorage.setItem('userData', JSON.stringify(newStoredData));
+        
+        setIsUserAuthorized(true);
+        setId(createResponse.data.id); // Set new ID in state
+      }
+  
       navigate('/');
     } catch (error) {
       console.error('Error saving user data:', error.response ? error.response.data : error.message);
     }
   };
-
+  
   return (
     <div className='wrapper'>
       <div className='headerstyle'>
