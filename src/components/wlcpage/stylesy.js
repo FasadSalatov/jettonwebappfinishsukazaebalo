@@ -21,7 +21,7 @@ function Stylesy() {
     if (userData && userData.userId) {
       setIsUserAuthorized(true);
       setId(userData.userId);
-      navigate('/');
+      navigate('/stylesy');
     }
 
     if (user) {
