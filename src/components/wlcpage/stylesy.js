@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { v4 as uuidv4 } from 'uuid';
 import './wlc.css';
 import headavatar from './headavatar.png';
 import tst from './trst.png';
@@ -15,22 +16,16 @@ function Stylesy() {
   const user = useTelegramUser();
   const navigate = useNavigate();
   const { setIsUserAuthorized, setId } = useUserData();
+  const TOKEN = '7098836545:AAF7HxBPRx0F_LmFIeWoQQgCn8Xl9xHlq-s';
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('userData'));
-    if (userData && userData.userId) {
-      setIsUserAuthorized(true);
-      setId(userData.userId);
-      navigate('/stylesy');
-    }
-
     if (user?.username) {
       setNickname(user.username);
     }
     if (user?.id) {
       setId(user.id);
     }
-  }, [user, setId, navigate, setIsUserAuthorized]);
+  }, [user, setId]);
 
   useEffect(() => {
     const fetchAvatars = async () => {
@@ -52,45 +47,46 @@ function Stylesy() {
   const handleAvatarClick = (avatar) => {
     setSelectedAvatar(avatar.image);
     setSelectedAvatarId(avatar.generatedId);
+    console.log("Выбранный аватар ID:", avatar.generatedId);
   };
 
   const handleSave = async () => {
-    console.log('Starting handleSave...');
-
-    if (!user?.id) {
-      console.error('Telegram ID is not available');
-      return;
-    }
-
-    const userData = {
-      id: user.id,
-      username: nickname || user.username || 'default_username',
-      telegram_id: user.id,
-      balance: 100,
-      twitter_account: '',
-      youtube_account: '',
-      remaining_invites: 10,
-      related_avatar: selectedAvatarId || 1,
-      related_languages: 0
-    };
-
-    console.log('User data to be saved:', userData);
-
     try {
-      const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
+      const userId = uuidv4();
+      const telegramId = user?.id; // Используем id из user, полученный при авторизации
 
+      console.log("ID пользователя:", userId);
+      console.log("ID выбранного аватара перед сохранением:", selectedAvatarId);
+
+      // Сохраняем данные в локальное хранилище
+      const userData = {
+        id: userId,
+        username: nickname || user?.username || 'default_username',
+        telegram_id: telegramId,
+        related_avatar: selectedAvatarId || 1,
+        balance: 100,
+      };
+
+      console.log("Пользовательские данные для сохранения:", userData);
+
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('userId', userId);
+
+      // Хранение данных пользователя в формате JSON в локальном хранилище
       const storedData = {
-        userId: response.data.id,
-        telegramId: response.data.telegram_id,
-        avatarId: response.data.related_avatar
+        userId: userId,
+        telegramId: telegramId,
+        avatarId: selectedAvatarId || 1
       };
       localStorage.setItem('userData', JSON.stringify(storedData));
 
       setIsUserAuthorized(true);
-      setId(response.data.id);
-      navigate('/stylesy');
+      setId(userId);
+      
+      navigate('/'); // Перенаправляем на главную страницу
     } catch (error) {
-      console.error('Error saving user data:', error.response ? error.response.data : error.message);
+      console.error('Ошибка при сохранении профиля:', error.response ? error.response.data : error.message);
+      alert('Ошибка при сохранении профиля.');
     }
   };
 
