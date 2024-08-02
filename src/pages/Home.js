@@ -13,6 +13,7 @@ import { useTaskContext } from '../context/TaskContext';
 import { TonConnectUIProvider, useTonConnectUI, useTonWallet, useTonAddress } from '@tonconnect/ui-react';
 import useUserData from '../hooks/useUserData.js';
 import axios from 'axios';
+
 function Home() {
   const { 
     tasks, 
@@ -181,7 +182,9 @@ function Home() {
     if (!Array.isArray(tasks)) return [];
     return tasks.filter(task => {
       if (filter === 'all') return true;
-      return task.related_task_type.toLowerCase() === filter.toLowerCase();
+      if (filter === 'social activity' && task.related_task_type.id === 1) return true;
+      if (filter === 'manual verification' && task.related_task_type.id === 2) return true;
+      return false;
     });
   }, [tasks, filter]);
 
