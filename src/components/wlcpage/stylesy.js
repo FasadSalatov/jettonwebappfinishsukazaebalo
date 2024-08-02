@@ -12,6 +12,7 @@ function Stylesy() {
   const [selectedAvatarId, setSelectedAvatarId] = useState(null);
   const [nickname, setNickname] = useState('');
   const [avatars, setAvatars] = useState([]);
+  const [error, setError] = useState('');
   const user = useTelegramUser();
   const navigate = useNavigate();
   const { setIsUserAuthorized, setId } = useUserData();
@@ -56,16 +57,16 @@ function Stylesy() {
 
   const handleSave = async () => {
     console.log('Starting handleSave...');
-    const userId = await getNextAvailableId();
-    if (!userId) {
-      console.error('Failed to get next available ID');
+
+    if (!user?.id) {
+      console.error('Telegram ID is not available');
       return;
     }
 
     const userData = {
-      id: userId,
-      username: nickname || user?.username || 'default_username',
-      telegram_id: user?.id || null,
+      id: user.id,
+      username: nickname || user.username || 'default_username',
+      telegram_id: user.id,
       balance: 100,
       twitter_account: '',
       youtube_account: '',
@@ -77,38 +78,42 @@ function Stylesy() {
     console.log('User data to be saved:', userData);
 
     try {
-      const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
+      // Check if user already exists
+      const existingUsersResponse = await axios.get('https://app.jettonwallet.com/api/v1/users/users/', {
+        params: {
+          telegram_id: user.id
+        }
+      });
 
-      const storedData = {
-        userId: response.data.id,
-        telegramId: response.data.telegram_id,
-        avatarId: response.data.related_avatar
-      };
-      localStorage.setItem('userData', JSON.stringify(storedData));
+      if (existingUsersResponse.data.count > 0) {
+        // User exists, log them in
+        const existingUser = existingUsersResponse.data.results[0];
+        setIsUserAuthorized(true);
+        setId(existingUser.id);
+        localStorage.setItem('userData', JSON.stringify({
+          userId: existingUser.id,
+          telegramId: existingUser.telegram_id,
+          avatarId: existingUser.related_avatar
+        }));
+        navigate('/stylesy');
+      } else {
+        // User does not exist, create a new one
+        const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
 
-      setIsUserAuthorized(true);
-      setId(response.data.id);
-      navigate('/stylesy');
+        const storedData = {
+          userId: response.data.id,
+          telegramId: response.data.telegram_id,
+          avatarId: response.data.related_avatar
+        };
+        localStorage.setItem('userData', JSON.stringify(storedData));
+
+        setIsUserAuthorized(true);
+        setId(response.data.id);
+        navigate('/stylesy');
+      }
     } catch (error) {
       console.error('Error saving user data:', error.response ? error.response.data : error.message);
-    }
-  };
-
-  const getNextAvailableId = async () => {
-    console.log('Getting next available ID...');
-    let id = 1;
-    while (true) {
-      try {
-        await axios.get(`https://app.jettonwallet.com/api/v1/users/users/${id}/`);
-        id += 1;
-      } catch (error) {
-        if (error.response && error.response.status === 404) {
-          console.log('Next available ID:', id);
-          return id;
-        }
-        console.error('Error getting next available ID:', error.response ? error.response.data : error.message);
-        return null;
-      }
+      setError(error.response ? error.response.data : error.message);
     }
   };
 
@@ -156,6 +161,7 @@ function Stylesy() {
       <div className='saved'>
         <button onClick={handleSave}><p>Save</p></button>
       </div>
+      {error && <div className='error'>{error}</div>}
     </div>
   );
 }
