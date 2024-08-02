@@ -8,7 +8,6 @@ import useUserData from '../../hooks/useUserData';
 import { useNavigate } from 'react-router-dom';
 
 function Stylesy() {
-  
   const [selectedAvatar, setSelectedAvatar] = useState(headavatar);
   const [selectedAvatarId, setSelectedAvatarId] = useState(null);
   const [nickname, setNickname] = useState('');
@@ -17,17 +16,12 @@ function Stylesy() {
   const navigate = useNavigate();
   const { setIsUserAuthorized, setId } = useUserData();
 
- 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('userData'));
-    if (!userData) {
-      // Если данных пользователя нет в localStorage, сбрасываем авторизацию
-      setIsUserAuthorized(false);
-      setId(null);
-    } else {
-      // Если данные пользователя есть, устанавливаем их в состоянии
-      setId(userData.userId);
+    if (userData && userData.userId) {
       setIsUserAuthorized(true);
+      setId(userData.userId);
+      navigate('/');
     }
 
     if (user) {
