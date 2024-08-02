@@ -24,10 +24,8 @@ function Stylesy() {
       navigate('/stylesy');
     }
 
-    if (user?.username) {
+    if (user) {
       setNickname(user.username);
-    }
-    if (user?.id) {
       setId(user.id);
     }
   }, [user, setId, navigate, setIsUserAuthorized]);
@@ -55,14 +53,26 @@ function Stylesy() {
   };
 
   const handleSave = async () => {
-    const userId = await getNextAvailableId();
+    console.log('Starting handleSave...');
+
+    if (!user?.id) {
+      console.error('Telegram ID is not available');
+      return;
+    }
+
     const userData = {
-      id: userId,
-      username: nickname || user?.username || 'default_username',
-      telegram_id: user?.id || null,
-      related_avatar: selectedAvatarId || 1,
+      id: user.id,
+      username: nickname || user.username || 'default_username',
+      telegram_id: user.id,
       balance: 100,
+      twitter_account: '',
+      youtube_account: '',
+      remaining_invites: 10,
+      related_avatar: selectedAvatarId || 1,
+      related_languages: 0
     };
+
+    console.log('User data to be saved:', userData);
 
     try {
       const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
@@ -78,25 +88,8 @@ function Stylesy() {
       setId(response.data.id);
       navigate('/stylesy');
     } catch (error) {
-      console.error('Error saving user data:', error);
+      console.error('Error saving user data:', error.response ? error.response.data : error.message);
     }
-  };
-
-  const getNextAvailableId = async () => {
-    let id = 1;
-    while (true) {
-      try {
-        await axios.get(`https://app.jettonwallet.com/api/v1/users/users/${id}/`);
-        id += 1;
-      } catch (error) {
-        if (error.response && error.response.status === 404) {
-          return id;
-        }
-        console.error('Error getting next available ID:', error);
-        break;
-      }
-    }
-    return null;
   };
 
   return (
