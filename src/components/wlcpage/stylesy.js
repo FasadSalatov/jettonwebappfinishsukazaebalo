@@ -24,10 +24,8 @@ function Stylesy() {
       navigate('/stylesy');
     }
 
-    if (user?.username) {
+    if (user) {
       setNickname(user.username);
-    }
-    if (user?.id) {
       setId(user.id);
     }
   }, [user, setId, navigate, setIsUserAuthorized]);
