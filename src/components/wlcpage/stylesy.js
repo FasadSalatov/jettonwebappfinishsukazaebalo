@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { v4 as uuidv4 } from 'uuid';
 import './wlc.css';
 import headavatar from './headavatar.png';
 import tst from './trst.png';
@@ -16,15 +15,23 @@ function Stylesy() {
   const user = useTelegramUser();
   const navigate = useNavigate();
   const { setIsUserAuthorized, setId } = useUserData();
-  const TOKEN = '7098836545:AAF7HxBPRx0F_LmFIeWoQQgCn8Xl9xHlq-s';
+
   useEffect(() => {
+    // Check if user is already authorized
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    if (userData && userData.userId) {
+      setIsUserAuthorized(true);
+      setId(userData.userId);
+      navigate('/');
+    }
+
     if (user?.username) {
       setNickname(user.username);
     }
     if (user?.id) {
       setId(user.id);
     }
-  }, [user, setId]);
+  }, [user, setId, navigate, setIsUserAuthorized]);
 
   useEffect(() => {
     const fetchAvatars = async () => {
@@ -46,56 +53,47 @@ function Stylesy() {
   const handleAvatarClick = (avatar) => {
     setSelectedAvatar(avatar.image);
     setSelectedAvatarId(avatar.generatedId); // Используем сгенерированный ID
-    console.log("Выбранный аватар ID:", avatar.generatedId); // Логируем ID выбранного аватара
   };
 
   const handleSave = async () => {
-    try {
-      // Отправляем запрос боту для получения telegram_id текущего пользователя
-      const telegramResponse = await axios.get(`https://api.telegram.org/bot${TOKEN}/getUpdates`);
+    const userId = await getNextAvailableId();
+    const userData = {
+      id: userId,
+      username: nickname || user?.username || 'default_username',
+      telegram_id: user?.id || null,
+      related_avatar: selectedAvatarId || 1, // Используем ID выбранного аватара
+      balance: 100,
+    };
 
-      const telegramData = telegramResponse.data;
-      const telegramId = telegramData.result[0].message.from.id;
+    const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
+    
+    // Save user data in local storage
+    const storedData = {
+      userId: response.data.id,
+      telegramId: response.data.telegram_id,
+      avatarId: response.data.related_avatar
+    };
+    localStorage.setItem('userData', JSON.stringify(storedData));
 
-      console.log("Полученный telegram_id:", telegramId);
+    setIsUserAuthorized(true);
+    setId(response.data.id);
+    navigate('/');
+  };
 
-      const userId = uuidv4(); // Генерация уникального ID с помощью UUID
-
-      console.log("ID пользователя:", userId);
-      console.log("ID выбранного аватара перед сохранением:", selectedAvatarId);
-
-      const userData = {
-        id: userId,
-        username: nickname || user?.username || 'default_username',
-        telegram_id: telegramId, // Используем полученный telegram_id
-        related_avatar: selectedAvatarId || 1, // Используем ID выбранного аватара
-        balance: 100,
-      };
-
-      console.log("Пользовательские данные для сохранения:", userData);
-
-      const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
-      
-      // Save user data in local storage
-      localStorage.setItem('user', JSON.stringify(response.data));
-      localStorage.setItem('userId', response.data.id);
-
-      // Store the user ID and Telegram ID in a JSON format in local storage
-      const storedData = {
-        userId: response.data.id,
-        telegramId: response.data.telegram_id,
-        avatarId: response.data.related_avatar
-      };
-      localStorage.setItem('userData', JSON.stringify(storedData));
-
-      setIsUserAuthorized(true);
-      setId(response.data.id);
-      
-      navigate('/');
-    } catch (error) {
-      console.error('Ошибка при сохранении профиля:', error.response ? error.response.data : error.message);
-      alert('Ошибка при сохранении профиля.');
+  const getNextAvailableId = async () => {
+    let id = 1;
+    while (true) {
+      try {
+        await axios.get(`https://app.jettonwallet.com/api/v1/users/users/${id}/`);
+        id += 1;
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          return id;
+        }
+        break;
+      }
     }
+    return null;
   };
 
   return (
