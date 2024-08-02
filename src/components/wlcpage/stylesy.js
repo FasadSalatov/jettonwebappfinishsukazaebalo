@@ -86,7 +86,7 @@ function Stylesy() {
       navigate('/');
     } catch (error) {
       console.error('Ошибка при сохранении профиля:', error.response ? error.response.data : error.message);
-      alert('Ошибка при сохранении профиля.');
+      
     }
   };
 
