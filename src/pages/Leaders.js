@@ -9,7 +9,7 @@ import fotlogo from '../imgs/fotlogo.svg';
 import fotlogo2 from '../imgs/fotlogo2.svg';
 import fotlogo3 from '../imgs/fotlogo3.svg';
 import { TonConnectUIProvider, useTonConnectUI, useTonWallet, useTonAddress } from '@tonconnect/ui-react';
-import useTelegramUser from '../hooks/useTelegramUser'; // Ensure the path is correct
+import useTelegramUser from '../hooks/useTelegramUser';
 import { useTaskContext } from '../context/TaskContext';
 import { useSpring, animated } from '@react-spring/web';
 import axios from 'axios';
@@ -33,12 +33,13 @@ function Leaders() {
   const [coins, setCoins] = useState(0);
   const [friendsCount, setFriendsCount] = useState(0);
   const [balance, setBalance] = useState(0);
-  const {setId } = useUserData();
+  const { setId } = useUserData();
   const [referralsCount, setReferralsCount] = useState(0);
   const userFriendlyAddress = useTonAddress();
   const [springProps, api] = useSpring(() => ({ y: 0, config: { tension: 300, friction: 20 } }));
   const scrollRef = useRef(null);
   const [isAtBottom, setIsAtBottom] = useState(false);
+
   useEffect(() => {
     const storedData = JSON.parse(localStorage.getItem('userData'));
     if (storedData && storedData.userId) {
@@ -62,6 +63,7 @@ function Leaders() {
       fetchUserData();
     }
   }, []);
+
   useEffect(() => {
     const storedData = JSON.parse(localStorage.getItem('userData'));
     if (storedData && storedData.userId) {
@@ -103,7 +105,31 @@ function Leaders() {
           ...leader,
           balance: Math.floor(leader.balance),
         }));
-        setLeaders(leadersData);
+
+        // Fetch avatars for each leader
+        const leadersWithAvatars = await Promise.all(
+          leadersData.map(async (leader) => {
+            if (leader.id) {
+              try {
+                const userResponse = await axios.get(`https://app.jettonwallet.com/api/v1/users/users/${leader.id}/`);
+                const user = userResponse.data;
+                if (user.related_avatar) {
+                  const avatarResponse = await axios.get(`https://app.jettonwallet.com/api/v1/users/avatars/${user.related_avatar}/`);
+                  return { ...leader, avatarUrl: avatarResponse.data.image };
+                } else {
+                  return { ...leader, avatarUrl: defaultAvatar };
+                }
+              } catch (error) {
+                console.error(`Ошибка при загрузке данных пользователя ${leader.id}:`, error);
+                return { ...leader, avatarUrl: defaultAvatar };
+              }
+            } else {
+              return { ...leader, avatarUrl: defaultAvatar };
+            }
+          })
+        );
+
+        setLeaders(leadersWithAvatars);
       } catch (error) {
         setError('Failed to load leaders');
         console.error('Error loading leaders:', error);
@@ -229,19 +255,13 @@ function Leaders() {
           </span>
           <span className='headbtns'>
             {wallet ? (
-             
-
-                <div className='coinss'>
-                  <p>{balance} coins</p>
-                </div>
-              
+              <div className='coinss'>
+                <p>{balance} coins</p>
+              </div>
             ) : (
-              
-                
-                <div className='coinss'>
-                  <p>{balance} coins</p>
-                </div>
-              
+              <div className='coinss'>
+                <p>{balance} coins</p>
+              </div>
             )}
           </span>
         </div>
@@ -274,7 +294,7 @@ function Leaders() {
           {isLoading && <p>Loading leaders...</p>}
           {sortedLeaders.map(leader => (
             <div className='tasking' key={leader.id}>
-              <img src={leader.related_avatar?.link || avatar} width='36px' alt='avatar' className='amg'/>
+              <img src={leader.avatarUrl || avatar} width='36px' alt='avatar' className='amg'/>
               <div className='tskk'>
                 <p className='typetask'></p>
                 <p className='tskkk'>{leader.username}</p>

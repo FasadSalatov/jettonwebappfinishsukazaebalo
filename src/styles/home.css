@@ -115,6 +115,10 @@ flex-grow: 1;
     border-radius: 12px;
 }
 
+.amg {
+    
+}
+
 .fotcont img {
     display: flex;
     align-self: center;
@@ -735,8 +739,11 @@ flex-grow: 0;
 }
 
 .tasking img {
-    padding-right: 2%;
+
     margin-left: -15%;
+    height: 36px;
+    width: 36px;
+    border-radius: 100%;
 }
 
 .tskimg {
