@@ -104,7 +104,7 @@ function Stylesy() {
 
       setIsUserAuthorized(true);
       setId(response.data.id);
-      navigate('/stylesy');
+      navigate('/');
     } catch (error) {
       console.error('Error saving user data:', error.response ? error.response.data : error.message);
     }
