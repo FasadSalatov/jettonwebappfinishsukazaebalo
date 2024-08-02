@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { v4 as uuidv4 } from 'uuid';
 import './wlc.css';
 import headavatar from './headavatar.png';
 import tst from './trst.png';
@@ -10,21 +9,26 @@ import { useNavigate } from 'react-router-dom';
 
 function Stylesy() {
   const [selectedAvatar, setSelectedAvatar] = useState(headavatar);
-  const [selectedAvatarId, setSelectedAvatarId] = useState(null); // Сохраняем ID выбранного аватара
+  const [selectedAvatarId, setSelectedAvatarId] = useState(null);
   const [nickname, setNickname] = useState('');
   const [avatars, setAvatars] = useState([]);
   const user = useTelegramUser();
   const navigate = useNavigate();
   const { setIsUserAuthorized, setId } = useUserData();
-  const TOKEN = '7098836545:AAF7HxBPRx0F_LmFIeWoQQgCn8Xl9xHlq-s';
+
   useEffect(() => {
-    if (user?.username) {
-      setNickname(user.username);
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    if (userData && userData.userId) {
+      setIsUserAuthorized(true);
+      setId(userData.userId);
+      navigate('/');
     }
-    if (user?.id) {
+
+    if (user) {
+      setNickname(user.username);
       setId(user.id);
     }
-  }, [user, setId]);
+  }, [user, setId, navigate, setIsUserAuthorized]);
 
   useEffect(() => {
     const fetchAvatars = async () => {
@@ -32,7 +36,7 @@ function Stylesy() {
         const response = await axios.get('https://app.jettonwallet.com/api/v1/users/avatars/');
         const avatarsWithId = response.data.results.map((avatar, index) => ({
           ...avatar,
-          generatedId: index + 1 // Присваиваем новый ID, начиная с 1
+          generatedId: index + 1
         }));
         setAvatars(avatarsWithId);
       } catch (error) {
@@ -45,42 +49,34 @@ function Stylesy() {
 
   const handleAvatarClick = (avatar) => {
     setSelectedAvatar(avatar.image);
-    setSelectedAvatarId(avatar.generatedId); // Используем сгенерированный ID
-    console.log("Выбранный аватар ID:", avatar.generatedId); // Логируем ID выбранного аватара
+    setSelectedAvatarId(avatar.generatedId);
   };
 
   const handleSave = async () => {
+    console.log('Starting handleSave...');
+
+    if (!user?.id) {
+      console.error('Telegram ID is not available');
+      return;
+    }
+
+    const userData = {
+      id: user.id,
+      username: nickname || user.username || 'default_username',
+      telegram_id: user.id,
+      balance: 100,
+      twitter_account: '',
+      youtube_account: '',
+      remaining_invites: 10,
+      related_avatar: selectedAvatarId || 1,
+      related_languages: 0
+    };
+
+    console.log('User data to be saved:', userData);
+
     try {
-      // Отправляем запрос боту для получения telegram_id текущего пользователя
-      const telegramResponse = await axios.get(`https://api.telegram.org/bot${TOKEN}/getUpdates`);
-
-      const telegramData = telegramResponse.data;
-      const telegramId = telegramData.result[0].message.from.id;
-
-      console.log("Полученный telegram_id:", telegramId);
-
-      const userId = uuidv4(); // Генерация уникального ID с помощью UUID
-
-      console.log("ID пользователя:", userId);
-      console.log("ID выбранного аватара перед сохранением:", selectedAvatarId);
-
-      const userData = {
-        id: userId,
-        username: nickname || user?.username || 'default_username',
-        telegram_id: telegramId, // Используем полученный telegram_id
-        related_avatar: selectedAvatarId || 1, // Используем ID выбранного аватара
-        balance: 100,
-      };
-
-      console.log("Пользовательские данные для сохранения:", userData);
-
       const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
-      
-      // Save user data in local storage
-      localStorage.setItem('user', JSON.stringify(response.data));
-      localStorage.setItem('userId', response.data.id);
 
-      // Store the user ID and Telegram ID in a JSON format in local storage
       const storedData = {
         userId: response.data.id,
         telegramId: response.data.telegram_id,
@@ -90,11 +86,9 @@ function Stylesy() {
 
       setIsUserAuthorized(true);
       setId(response.data.id);
-      
-      navigate('/');
+      navigate('/stylesy');
     } catch (error) {
-      console.error('Ошибка при сохранении профиля:', error.response ? error.response.data : error.message);
-      alert('Ошибка при сохранении профиля.');
+      console.error('Error saving user data:', error.response ? error.response.data : error.message);
     }
   };
 
@@ -124,7 +118,7 @@ function Stylesy() {
           {avatars.length > 0 ? (
             avatars.map((avatar) => (
               <button
-                key={avatar.generatedId} // Используем сгенерированный ID
+                key={avatar.generatedId}
                 className={`avatar-button ${selectedAvatar === avatar.image ? 'selected' : ''}`}
                 onClick={() => handleAvatarClick(avatar)}
               >
