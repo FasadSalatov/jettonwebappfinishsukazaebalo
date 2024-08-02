@@ -43,8 +43,6 @@ function Home() {
 
 
   const goToStylesy = () => {
-    localStorage.removeItem('userData'); // Удаление данных пользователя
-    
     navigate('/stylesy');
   };
   // Fetch user data based on stored ID
