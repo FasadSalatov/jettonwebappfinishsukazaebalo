@@ -65,25 +65,28 @@ function Stylesy() {
       return;
     }
   
+    // Заполняем данные для отправки
     const userData = {
-      id: user.id,
-      username: nickname || user.username || 'default_username',
-      telegram_id: user.id,
-      balance: 100,
-      twitter_account: '',
-      youtube_account: '',
-      remaining_invites: 10,
-      related_avatar: selectedAvatarId || 1,
-      related_languages: 0
+      username: nickname || user.username || 'default_username', // Имя пользователя
+      telegram_id: user.id, // Telegram ID
+      balance: 100, // Баланс (можно изменить по необходимости)
+      twitter_account: '', // Twitter аккаунт (по умолчанию пусто)
+      youtube_account: '', // YouTube аккаунт (по умолчанию пусто)
+      remaining_invites: 10, // Оставшиеся приглашения
+      related_avatar: selectedAvatarId || 1, // Идентификатор аватара
+      related_languages: 0 // Идентификатор языков (по умолчанию 0)
     };
   
     console.log('User data to be saved:', userData);
   
     try {
+      // Отправляем запрос на сервер для сохранения данных пользователя
       const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
   
+      // Логгируем ответ от сервера
       console.log('Response from server:', response);
   
+      // Сохраняем данные пользователя в localStorage
       const storedData = {
         userId: response.data.id,
         telegramId: response.data.telegram_id,
@@ -91,8 +94,11 @@ function Stylesy() {
       };
       localStorage.setItem('userData', JSON.stringify(storedData));
   
+      // Обновляем состояние авторизации и идентификатор пользователя
       setIsUserAuthorized(true);
       setId(response.data.id);
+  
+      // Перенаправляем пользователя на главную страницу
       navigate('/');
     } catch (error) {
       console.error('Error saving user data:', error.response ? error.response.data : error.message);
