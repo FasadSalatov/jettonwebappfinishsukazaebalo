@@ -17,7 +17,19 @@ function Stylesy() {
   const navigate = useNavigate();
   const { setIsUserAuthorized, setId } = useUserData();
 
- 
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    if (userData && userData.userId) {
+      setIsUserAuthorized(true);
+      setId(userData.userId);
+      navigate('/');
+    }
+
+    if (user) {
+      setNickname(user.username);
+      setId(user.id);
+    }
+  }, [user, setId, navigate, setIsUserAuthorized]);
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('userData'));
     if (!userData) {
