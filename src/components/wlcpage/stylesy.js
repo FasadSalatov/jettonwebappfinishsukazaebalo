@@ -59,12 +59,12 @@ function Stylesy() {
 
   const handleSave = async () => {
     console.log('Starting handleSave...');
-
+  
     if (!user?.id) {
       console.error('Telegram ID is not available');
       return;
     }
-
+  
     const userData = {
       id: user.id,
       username: nickname || user.username || 'default_username',
@@ -76,19 +76,21 @@ function Stylesy() {
       related_avatar: selectedAvatarId || 1,
       related_languages: 0
     };
-
+  
     console.log('User data to be saved:', userData);
-
+  
     try {
       const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
-
+  
+      console.log('Response from server:', response);
+  
       const storedData = {
         userId: response.data.id,
         telegramId: response.data.telegram_id,
         avatarId: response.data.related_avatar
       };
       localStorage.setItem('userData', JSON.stringify(storedData));
-
+  
       setIsUserAuthorized(true);
       setId(response.data.id);
       navigate('/');
@@ -96,6 +98,7 @@ function Stylesy() {
       console.error('Error saving user data:', error.response ? error.response.data : error.message);
     }
   };
+  
 
   return (
     <div className='wrapper'>
