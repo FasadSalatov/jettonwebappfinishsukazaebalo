@@ -24,8 +24,10 @@ function Stylesy() {
       navigate('/stylesy');
     }
 
-    if (user) {
+    if (user?.username) {
       setNickname(user.username);
+    }
+    if (user?.id) {
       setId(user.id);
     }
   }, [user, setId, navigate, setIsUserAuthorized]);
@@ -78,7 +80,7 @@ function Stylesy() {
       const response = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
 
       const storedData = {
-        id: response.data.id,
+        userId: response.data.id,
         telegramId: response.data.telegram_id,
         avatarId: response.data.related_avatar
       };
