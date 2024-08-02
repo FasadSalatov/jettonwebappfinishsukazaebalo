@@ -30,23 +30,6 @@ function Stylesy() {
       setId(user.id);
     }
   }, [user, setId, navigate, setIsUserAuthorized]);
-  useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('userData'));
-    if (!userData) {
-      // Если данных пользователя нет в localStorage, сбрасываем авторизацию
-      setIsUserAuthorized(false);
-      setId(null);
-    } else {
-      // Если данные пользователя есть, устанавливаем их в состоянии
-      setId(userData.userId);
-      setIsUserAuthorized(true);
-    }
-
-    if (user) {
-      setNickname(user.username);
-      setId(user.id);
-    }
-  }, [user, setId, navigate, setIsUserAuthorized]);
 
   useEffect(() => {
     const fetchAvatars = async () => {
