@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useSpring, animated } from '@react-spring/web';
 import '../styles/home.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import defaultAvatar from '../components/wlcpage/headavatar.png';
 import tg from '../imgs/tg.svg';
 import fotlogo from '../imgs/fotlogo.svg';
@@ -13,7 +13,6 @@ import { useTaskContext } from '../context/TaskContext';
 import { TonConnectUIProvider, useTonConnectUI, useTonWallet, useTonAddress } from '@tonconnect/ui-react';
 import useUserData from '../hooks/useUserData.js';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 
 function Home() {
   const {
@@ -23,6 +22,7 @@ function Home() {
     hasMoreTasks,
     setIsLoading
   } = useUserData();
+
   const navigate = useNavigate();
   const [friendsCount, setFriendsCount] = useState(0);
   const [userData, setUserData] = useState(null);
@@ -41,10 +41,12 @@ function Home() {
   const scrollRef = useRef(null);
   const [completedTasks, setCompletedTasks] = useState([]);
 
+  // Navigate to stylesy page
   const goToStylesy = () => {
     navigate('/stylesy');
   };
-  // Fetch user data based on stored ID
+
+  // Fetch user data and completed tasks
   useEffect(() => {
     const storedData = JSON.parse(localStorage.getItem('userData'));
     if (storedData && storedData.userId) {
@@ -94,7 +96,7 @@ function Home() {
     };
 
     fetchTasks();
-  }, []);
+  }, [setTasks, setIsLoading]);
 
   // Fetch task details
   const fetchTaskDetails = async (taskId) => {
@@ -107,6 +109,7 @@ function Home() {
     }
   };
 
+  // Update user balance on the server
   const updateUserBalance = async (userId, newBalance) => {
     try {
       await axios.patch(`https://app.jettonwallet.com/api/v1/users/users/${userId}/`, {
@@ -118,6 +121,7 @@ function Home() {
     }
   };
 
+  // Handle claiming a task
   const handleClaimClick = useCallback(async (taskId, coins) => {
     if (!taskId) {
       console.error('Task ID is undefined');
@@ -150,10 +154,12 @@ function Home() {
     }
   }, [balance, fetchTaskDetails, updateUserBalance, completedTasks]);
 
+  // Close modal
   const handleCloseModal = useCallback(() => {
     setShowModal(false);
   }, []);
 
+  // Connect wallet
   const handleConnectWallet = useCallback(async () => {
     try {
       await tonConnectUI.connectWallet();
@@ -166,10 +172,12 @@ function Home() {
     }
   }, [tonConnectUI, userFriendlyAddress]);
 
+  // Handle wallet modal visibility
   const handleWalletClick = useCallback(() => {
     setWalletModalVisible(true);
   }, []);
 
+  // Copy wallet address
   const handleCopyWallet = useCallback(() => {
     if (userFriendlyAddress) {
       navigator.clipboard.writeText(userFriendlyAddress);
@@ -178,6 +186,7 @@ function Home() {
     }
   }, [userFriendlyAddress]);
 
+  // Disconnect wallet
   const handleDisconnectWallet = useCallback(async () => {
     try {
       await tonConnectUI.disconnect();
@@ -189,15 +198,18 @@ function Home() {
     }
   }, [tonConnectUI]);
 
+  // Mask wallet address
   const maskWallet = (address) => {
     if (!address) return '';
     return `${address.slice(0, 3)}****${address.slice(-3)}`;
   };
 
+  // Close wallet modal
   const closeWalletModal = () => {
     setWalletModalVisible(false);
   };
 
+  // Filter tasks
   const filteredTasks = useMemo(() => {
     if (!Array.isArray(tasks)) return [];
     return tasks.filter(task => {
@@ -210,7 +222,7 @@ function Home() {
 
   const username = userData?.username || '';
 
-  // New function to clear stored data
+  // Clear stored data
   const clearStoredData = () => {
     localStorage.removeItem('userData');
     localStorage.removeItem('completedTasks');
@@ -329,7 +341,7 @@ function Home() {
             ))}
 
             {isLoading && <p>Loading more tasks...</p>}
-            {!hasMoreTasks && <p></p>}
+            {!hasMoreTasks && <p>No more tasks available</p>}
           </animated.div>
 
           <div className={`blur-overlay ${showModal || walletModalVisible ? 'show' : ''}`} />
@@ -337,7 +349,7 @@ function Home() {
         <div className='fot'>
           <div className='fotcont'>
             <Link to='/'><button className='activebtn'><img src={fotlogo} alt='Home' /></button></Link>
-            <Link to='/Contact'><button ><img src={fotlogo2} alt='Contact' /></button></Link>
+            <Link to='/Contact'><button><img src={fotlogo2} alt='Contact' /></button></Link>
             <Link to='/about'><button><img src={fotlogo3} alt='About' /></button></Link>
           </div>
         </div>
