@@ -41,6 +41,7 @@ function Home() {
   const scrollRef = useRef(null);
   const [completedTasks, setCompletedTasks] = useState([]);
 
+
   const goToStylesy = () => {
     navigate('/stylesy');
   };
@@ -52,7 +53,7 @@ function Home() {
         try {
           const userResponse = await axios.get(`https://app.jettonwallet.com/api/v1/users/users/${storedData.userId}/`);
           const user = userResponse.data;
-          setUserData(user.id);
+          setUserData(user);
           setBalance(user.balance);
           setReferralsCount(user.remaining_invites);
 
@@ -210,18 +211,6 @@ function Home() {
 
   const username = userData?.username || '';
 
-  // New function to clear stored data
-  const clearStoredData = () => {
-    localStorage.removeItem('userData');
-    localStorage.removeItem('completedTasks');
-    setUserData(null);
-    setCompletedTasks([]);
-    setBalance(0);
-    setFriendsCount(0);
-    setReferralsCount(0);
-    setAvatarImage(defaultAvatar);
-  };
-
   return (
     <TonConnectUIProvider manifestUrl="https://jettocoinwebapp.vercel.app/tonconnect-manifest.json">
       <div className="container">
@@ -261,7 +250,6 @@ function Home() {
                   </div>
                 </div>
               )}
-              <button onClick={clearStoredData} className="clear-data-button">Clear Data</button>
             </span>
           </div>
         </div>
