@@ -84,12 +84,12 @@ function Stylesy() {
       } else {
         const createResponse = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
         
-        const newStoredData = {
+        const storedData = {
           userId: createResponse.data.id,
           telegramId: user.id,
           avatarId: createResponse.data.related_avatar,
         };
-        localStorage.setItem('userData', JSON.stringify(newStoredData));
+        localStorage.setItem('userData', JSON.stringify(storedData));
         
         setIsUserAuthorized(true);
         setId(createResponse.data.id);
