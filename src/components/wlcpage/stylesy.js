@@ -75,15 +75,15 @@ function Stylesy() {
     try {
       // Check if the user already exists in the database
       const response = await axios.get(`https://app.jettonwallet.com/api/v1/users/users/?telegram_id=${user.id}`);
-      const existingUser = response.data.results[0];
+      const user = response.data.results[0];
   
-      if (existingUser) {
+      if (user) {
         // User already exists, update the existing user
-        await axios.patch(`https://app.jettonwallet.com/api/v1/users/users/${existingUser.id}/`, { related_avatar: userData.related_avatar });
+        await axios.patch(`https://app.jettonwallet.com/api/v1/users/users/${user.id}/`, { related_avatar: userData.related_avatar });
   
         // Update the storedData with the new avatar ID
         const storedData = {
-          userId: existingUser.id,
+          userId: user.id,
           telegramId: user.id,
           avatarId: userData.related_avatar,
         };
@@ -95,14 +95,14 @@ function Stylesy() {
         const createResponse = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
         
         const storedData = {
-          userId: existingUser.id, // New ID from the server
+          userId: user.id, // New ID from the server
           telegramId: user.id,
           avatarId: createResponse.data.related_avatar,
         };
         localStorage.setItem('userData', JSON.stringify(storedData));
         
         setIsUserAuthorized(true);
-        setId(existingUser.id); // Set new ID in state
+        setId(user.id); // Set new ID in state
       }
   
       navigate('/');
