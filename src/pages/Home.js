@@ -53,7 +53,7 @@ function Home() {
         try {
           const userResponse = await axios.get(`https://app.jettonwallet.com/api/v1/users/users/${storedData.userId}/`);
           const user = userResponse.data;
-          setUserData(user);
+          setUserData(user.id);
           setBalance(user.balance);
           setReferralsCount(user.remaining_invites);
 
