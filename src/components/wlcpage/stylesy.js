@@ -83,7 +83,7 @@ function Stylesy() {
   
         // Update the storedData with the new avatar ID
         const storedData = {
-          userId: user,
+          userId: user.id,
           telegramId: user.id,
           avatarId: userData.related_avatar,
         };
