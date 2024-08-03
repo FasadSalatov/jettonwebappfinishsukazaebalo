@@ -85,7 +85,7 @@ function Stylesy() {
         const createResponse = await axios.post('https://app.jettonwallet.com/api/v1/users/users/', userData);
         
         const newStoredData = {
-          userId: existingUser.id,
+          userId: createResponse.data.id,
           telegramId: user.id,
           avatarId: createResponse.data.related_avatar,
         };
